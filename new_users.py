@@ -52,11 +52,12 @@ def createNewUsers(user_prefix, user_range, mail_postfix, password):
                             "password":u.password})
         print res
         
-        res = _updateNickname(u.username, u.nickname)
+        res = _updateNickname(u.username, u.nickname, password=u.password)
         print res
         
-        res = _update_sioeye_id(u.username, u.password)
-        print res
+        # /1.1/users produce the sioeye id now.
+        #res = _update_sioeye_id(u.username, u.password)
+        #print res
         
 # deviceId must be active and binding to the user
 # using my mi's installationId
@@ -75,7 +76,13 @@ def _updateNickname(username, nickname, password="12345678", pushId="ABCDEFGHIJK
     if devlist is not None:
         devid = devlist[0].id
         
-    user_update_C = MyCurl2("/1.1/functions/user_update", username)
+    login_C = MyCurl("/1.1/login")
+    res = login_C.post({"username":username,"password":password})
+    resjson = json.loads(res)
+    print resjson['sessionToken']
+    
+    user_update_C = MyCurl("/1.1/functions/user_update")
+    user_update_C.add_sessiontoken_to_headers(resjson['sessionToken'])
     res = user_update_C.post({"deviceId":devid,"nickname":nickname})
     time.sleep(0.2)
     
