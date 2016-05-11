@@ -102,6 +102,6 @@ def commandui(args=sys.argv[1:]):
 
 if __name__ == '__main__':
 #    commandui(args=['-c', '-b', 'alice@sioeye.com', '-t', "alice is", '-f', 'data/members.txt'])
-    commandui(args=['-c', '-b', 'alice@sioeye.com', '-t', "alice is", '-m', 'user00003@may.event', '--time'])
-#    commandui()
+#    commandui(args=['-c', '-b', 'alice@sioeye.com', '-t', "alice is", '-m', 'user00003@may.event', '--time'])
+    commandui()
     
