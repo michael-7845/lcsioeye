@@ -20,9 +20,9 @@ def _exit(users, beginner, title):
     for u in users:
         chat.user_exit_conv_of_creator_title(u, beginner, title)
         
-def _chat(users, beginner, title, message="=== testing message. ==="):
+def _chat(users, beginner, title, message="=== testing message. ===", withtime=False):
     for u in users:
-        chat.user_send_in_conv_of_creator_title(u, beginner, title, message)
+        chat.user_send_in_conv_of_creator_title(u, beginner, title, message, withtime)
 
 def commandui(args=sys.argv[1:]):
     parser = optparse.OptionParser(usage="%prog [options]", version="%prog 1.0")
@@ -66,8 +66,13 @@ def commandui(args=sys.argv[1:]):
     parser.add_option("--message", 
                       dest="message",
                       action="store",
-                      default="=== hello ===",
+                      default="hello",
                       help='the sending message. By default, "=== hello ==="')
+    parser.add_option("--time",
+                      dest="withtime",
+                      action="store_true",
+                      default=False,
+                      help='if sending message postfixes time. By default, not prefix time')
     
     (options, args) = parser.parse_args(args)
     
@@ -91,10 +96,12 @@ def commandui(args=sys.argv[1:]):
     elif options.exit: # exit the conversation
         _exit(members, options.beginner, options.title)
     elif options.chat:
-        _chat(members, options.beginner, options.title, options.message)
+        _chat(members, options.beginner, options.title, options.message, options.withtime)
     else:
         parser.error("Please select action: -i or -o or -c .")
 
 if __name__ == '__main__':
-    commandui()
+#    commandui(args=['-c', '-b', 'alice@sioeye.com', '-t', "alice is", '-f', 'data/members.txt'])
+    commandui(args=['-c', '-b', 'alice@sioeye.com', '-t', "alice is", '-m', 'user00003@may.event', '--time'])
+#    commandui()
     
