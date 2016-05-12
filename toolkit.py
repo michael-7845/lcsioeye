@@ -8,6 +8,9 @@ from leancloud import Query
 
 # initialize the environment to Sioeye_UT03
 leancloud.init(MyEnv.appid, MyEnv.appkey)
+#leancloud.init(MyEnv.appid, master_key=MyEnv.masterkey)
+if MyEnv.is_us_environment:
+    leancloud.use_region('US')
 
 '''
 Created on 2016-4-27
@@ -19,6 +22,11 @@ debug_flag = True
     
 ################################## file category
 def _read_many(filepath):
+    import os
+    if not os.path.exists(filepath):
+        print "%s does not exist!" % filepath
+        exit(1)
+    
     f = open(filepath, "r")
     data = [line.strip() for line in f.readlines() if len(line) > 0]
     f.close()
@@ -30,15 +38,21 @@ def _read_many(filepath):
 def showo_inDict(o):
     if debug_flag:
         print "-----------"
+        if o is None:
+            print None
+            return
         d = dict(o.dump())
         for (k,v) in d.items():
             print "%10s : %-s" % (k,v)
             
 def showo_inStr(o):
     if debug_flag:
+        if o is None:
+            print None
+            return
         print o.dump()
             
-print_func = showo_inDict
+print_func = showo_inStr
     
 # print the query's result list
 def showrl(qr, show_func=print_func):
@@ -49,17 +63,11 @@ def showrl(qr, show_func=print_func):
     
 ################################## leancloud - device
 def active_device_by_username(username):
-    print "========= %s" % username
-    uq = Query("_User")
-    uq.equal_to("username", username)
-    user = uq.first()
-    showo_inDict(user)
-    
+    user = user_by_username(username)
     dq = Query("Device")
     dq.equal_to("caster", user)
     dq.equal_to("status", "Active")
     device_list = dq.find()
-    showrl(device_list)
     return device_list
     
 ################################## leancloud - user
@@ -82,21 +90,26 @@ def user_info_by_username(username, showfunc=showo_inDict):
     user = query.first()
     user_info = user.get("sioeyeInfo")
     user_avatar = user_info.get("avatar")
+    (u, ui, ua) = (None, None, None)
     if user is not None:
         print "=== user ==="
         showfunc(user)
+        u = user
     if user_info is not None:
         print "=== user info ==="
         showfunc(user_info)
+        ui = user_info
     if user_avatar is not None:
         print "=== user avatar==="
         showfunc(user_avatar)
-        
+        ua = user_avatar
 #    print "%s: %s" % (username, user_info.get("sioeyeId"))
     print "------------ next ------------"
+    return u, ui, ua
     
 # To print <many> users
 def many_users(many):
+    print MyEnv.appid, MyEnv.appkey
     query = Query("_User")
     query.descending("createdAt")
     query.include("sioeyeInfo")
@@ -160,6 +173,8 @@ def _add_m_in_conv_id(newmem, convid):
     
     mem_list = conv.get("m")
     mem = mem_list + newmem
+#    print mem
+#    print list(set(mem)) 
     # remove the repeated item
     conv.set("m", list(set(mem)))
     conv.save()
@@ -171,9 +186,80 @@ def _remove_m_in_conv_id(delmem, convid):
     
     mem_list = conv.get("m")
     mem = list(set(mem_list) - set(delmem))
+#    print mem
     conv.set("m", list(set(mem)))
     conv.save()
     
+################################## new : 
+def my_fans(username, howmany=100):
+    user = user_by_username(username)
+    
+    fans_q = Query("_Follower")
+    fans_q.equal_to("user", user)
+    fans_q.limit(howmany)
+    fans_q.include("follower")
+    fans_res = fans_q.find()
+    showrl(fans_res, show_func=showo_inStr)
+    
+    f_q = Query("_Follower")
+    f_q.equal_to("user", user)
+    f_q.limit(howmany)
+    device_q = Query("Device")
+    device_q.matches_key_in_query("caster", "follower", f_q)
+    device_q.equal_to("status", "Active")
+    device_q.include("caster")
+    device_q.limit(howmany)
+    device_res = device_q.find()
+    showrl(device_res, show_func=showo_inStr)
+    
+    d = {}
+    for f in fans_res:
+        follower = f.get("follower")
+        active_dev = None
+        for dev in device_res:
+            if dev.get("caster").id == follower.id:
+                active_dev = dev
+        d[follower.get('username')] = (follower, active_dev)
+    return d
+    
+############################# new : my_fans
+def my_fans_demo():
+    d = my_fans("pengfei.lin@ck-telecom.com", 500)
+    
+    # output to file
+    outf = open("felix_fans.txt", 'w')
+#    out_format = "%-30s, %-30s, %-30s, %-30s"
+    out_format = "%s,%s,%s,%s"
+    print >>outf, out_format % ("username", "email", "user-id", "active-device-id")
+    for rn in sorted([n[::-1] for n in d.keys()]):
+        rrn = rn[::-1]; fans = d[rrn][0]; device = d[rrn][1]
+        if device is not None:
+            print >>outf, out_format % (fans.get("username"), fans.get("email"), fans.id, device.id)
+#        else:
+#            print >>outf, out_format % (fans.get("username"), fans.get("email"), fans.id, None)
+    outf.close()
+
+############################# new : leancloud - live
+def live_by_username(username, howmany):
+    lq = Query("Live")
+    user = user_by_username(username)
+    lq.equal_to("caster", user)
+    lq.limit(howmany)
+    results = lq.find()
+#    for res in results:
+#        print "username: %s, user id: %s, live id: %s, nickname: %s" % (username, 
+#                    user.id, res.id, user.get("nickname"))
+    return results
+    
+def caster_by_live_id(live_id):
+    lq = Query("Live")
+    lq.equal_to("objectId", live_id)
+    lq.include("caster")
+    live = lq.first()
+    return live.get("caster")
+    
 if __name__ == '__main__':
     pass
+    
+    
     
