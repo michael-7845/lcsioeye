@@ -9,8 +9,8 @@ from leancloud import Query
 # initialize the environment to Sioeye_UT03
 leancloud.init(MyEnv.appid, MyEnv.appkey)
 #leancloud.init(MyEnv.appid, master_key=MyEnv.masterkey)
-if MyEnv.is_us_environment:
-    leancloud.use_region('US')
+#if you want to use us environment, uncomment it.
+#leancloud.use_region('US')
 
 '''
 Created on 2016-4-27
