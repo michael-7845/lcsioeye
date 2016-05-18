@@ -20,9 +20,11 @@ def _exit(users, beginner, title):
     for u in users:
         chat.user_exit_conv_of_creator_title(u, beginner, title)
         
-def _chat(users, beginner, title, message="=== testing message. ===", withtime=False):
+def _chat(users, beginner, title, message="=== testing message. ===", withtime=False, interval=0):
+    import time
     for u in users:
         chat.user_send_in_conv_of_creator_title(u, beginner, title, message, withtime)
+        time.sleep(interval)
 
 def commandui(args=sys.argv[1:]):
     parser = optparse.OptionParser(usage="%prog [options]", version="%prog 1.0")
@@ -73,6 +75,12 @@ def commandui(args=sys.argv[1:]):
                       action="store_true",
                       default=False,
                       help='if sending message postfixes time. By default, not prefix time')
+    parser.add_option("--interval", 
+                      dest="interval",
+                      action="store",
+                      default=0,
+                      type=int,
+                      help='sending interval. By default, 0s, i.e. no delay between sending')
     
     (options, args) = parser.parse_args(args)
     
@@ -96,7 +104,7 @@ def commandui(args=sys.argv[1:]):
     elif options.exit: # exit the conversation
         _exit(members, options.beginner, options.title)
     elif options.chat:
-        _chat(members, options.beginner, options.title, options.message, options.withtime)
+        _chat(members, options.beginner, options.title, options.message, options.withtime, options.interval)
     else:
         parser.error("Please select action: -i or -o or -c .")
 
