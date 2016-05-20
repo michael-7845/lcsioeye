@@ -17,8 +17,8 @@ Created on 2016-4-27
 @author: Michael Yu
 '''
 
-debug_flag = True
-#debug_flag = False
+#debug_flag = True
+debug_flag = False
     
 ################################## file category
 def _read_many(filepath):
