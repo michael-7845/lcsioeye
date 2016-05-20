@@ -80,6 +80,20 @@ def user_by_username(username):
 #        showo_inDict(user)
     return user
     
+def user_by_sioeyeid(id):
+    query = Query("UserInfo")
+    query.equal_to("sioeyeId", id)
+    query.include("userId")
+    ui = None
+    try:
+        ui = query.first()
+    except leancloud.errors.LeanCloudError:
+        pass 
+    user = None
+    if ui is not None:
+        user = ui.get("userId")
+    return user
+    
 # To print user's import properties, by username
 def user_info_by_username(username, showfunc=showo_inDict):
     query = Query("_User")
